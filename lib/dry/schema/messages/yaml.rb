@@ -189,7 +189,7 @@ module Dry
         # @api private
         def load_translations(path)
           data = self.class.source_cache.fetch_or_store(path) do
-            self.class.flat_hash(::YAML.load_file(path)).freeze
+            self.class.flat_hash(load_yaml(path)).freeze
           end
 
           return data unless custom_top_namespace?(path)
@@ -202,6 +202,15 @@ module Dry
           return key unless key.include?(LOCALE_TOKEN)
 
           key % {locale: options[:locale] || default_locale}
+        end
+
+        # @api private
+        def load_yaml(src)
+          if Psych::VERSION > "4.0"
+            ::YAML.safe_load(src, permitted_classes: [Symbol], aliases: true)
+          else
+            ::YAML.load(src)
+          end
         end
       end
     end
